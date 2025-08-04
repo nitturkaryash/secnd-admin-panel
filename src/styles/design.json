@@ -1,0 +1,278 @@
+{
+    "elementStyling": {
+      "appBackground": {
+        "background": "#F7F8FA",
+        "DO_NOT": [
+          "Do not use gradients or bold colors, maintain a neutral, very light-gray flat background for all main app areas."
+        ]
+      },
+      "cardContainers": {
+        "background": "#FFFFFF",
+        "border": "#E0E3EB",
+        "shadow": "0 4px 16px 0 rgba(30, 51, 110, 0.04)",
+        "borderRadius": "18px",
+        "hover": {
+          "shadow": "0 6px 24px 0 rgba(30, 51, 110, 0.07)"
+        },
+        "icons": {
+          "container": "#F5F7FB",
+          "fill": "#2766E1",
+          "DO_NOT": [
+            "Do not use card gradients or darker backgrounds on card icons.",
+            "Do not apply button background color to card icons."
+          ]
+        }
+      },
+      "calendarEventCards": {
+        "background": {
+          "Check Health": "rgba(140, 116, 250, 0.06)",
+          "Check-Up Kid": "rgba(237, 199, 81, 0.08)",
+          "Heart Check-Up": "rgba(71, 202, 132, 0.10)",
+          "Physical Control Health": "linear-gradient(90deg, #2766E1 0%, #18C8FF 100%)",
+          "Body Condition": "rgba(71, 202, 132, 0.07)",
+          "Check Your Teeth": "rgba(71, 202, 132, 0.10)",
+          "Check-Up": "rgba(140, 116, 250, 0.06)"
+        },
+        "border": "none",
+        "text": "#222C47",
+        "DO_NOT": [
+          "Do not use event card backgrounds on container cards.",
+          "Do not use gradients for calendar event cards except the highlighted event."
+        ]
+      },
+      "topBar": {
+        "background": "#FFFFFF",
+        "iconFill": "#2766E1",
+        "notificationIcon": "#1E2650",
+        "profileBorder": "#E0E3EB",
+        "DO_NOT": [
+          "Do not apply button or event gradient backgrounds to the top navigation bar."
+        ]
+      },
+      "navigation": {
+        "activeTab": {
+          "background": "linear-gradient(90deg, #2766E1 0%, #18C8FF 100%)",
+          "text": "#FFFFFF"
+        },
+        "inactiveTab": {
+          "background": "transparent",
+          "text": "#1E2650"
+        },
+        "DO_NOT": [
+          "Do not use solid colors or event backgrounds for active tab states."
+        ]
+      },
+      "buttons": {
+        "primary": {
+          "background": "linear-gradient(90deg, #2766E1 0%, #18C8FF 100%)",
+          "text": "#FFFFFF",
+          "icon": "#FFFFFF",
+          "hover": {
+            "background": "linear-gradient(90deg, #1f52b4 0%, #1095c1 100%)"
+          },
+          "active": {
+            "background": "linear-gradient(90deg, #1a4499 0%, #0ea4c7 100%)"
+          },
+          "disabled": {
+            "background": "#EEEEF5",
+            "text": "#ADB4BE",
+            "icon": "#ADB4BE"
+          },
+          "focus": {
+            "outerBorder": "#2766E1",
+            "shadow": "0 0 0 2px rgba(39, 102, 225, 0.30)"
+          },
+          "DO_NOT": [
+            "Do not use primary gradient on secondary or tertiary buttons.",
+            "Do not apply primary button background to calendar cards."
+          ]
+        },
+        "secondary": {
+          "background": "#E6F0FD",
+          "text": "#2766E1",
+          "icon": "#2766E1",
+          "hover": {
+            "background": "#D6EBFF"
+          },
+          "active": {
+            "background": "#B5D9FF"
+          },
+          "disabled": {
+            "background": "#F3F6FA",
+            "text": "#ADB4BE"
+          },
+          "focus": {
+            "outerBorder": "#2766E1"
+          },
+          "DO_NOT": [
+            "Do not use primary button gradient.",
+            "Do not use secondary color as a background for any cards."
+          ]
+        }
+      },
+      "formInputs": {
+        "background": "#F5F7FB",
+        "border": "#D1D9E0",
+        "text": "#222C47",
+        "placeholder": "#ADB4BE",
+        "focus": {
+          "border": "#2766E1"
+        },
+        "disabled": {
+          "background": "#F3F6FA",
+          "text": "#ADB4BE"
+        },
+        "DO_NOT": [
+          "Do not use button gradients or card background for input fields."
+        ]
+      },
+      "calendarSidebar": {
+        "background": "#FFFFFF",
+        "border": "#E0E3EB",
+        "activeDayCircle": "#2766E1",
+        "activeDayCircleText": "#FFFFFF",
+        "inactiveDayText": "#222C47",
+        "DO_NOT": [
+          "Do not use button or event gradients for sidebar backgrounds."
+        ]
+      },
+      "text": {
+        "heading1": "#222C47",
+        "heading2": "#394164",
+        "body": "#5E6A81",
+        "inactive": "#ADB4BE",
+        "inverseOnPrimary": "#FFFFFF",
+        "subtle": "#BFC6CF",
+        "DO_NOT": [
+          "Do not use color designated for headings or primary buttons on background elements.",
+          "Do not use inverse text colors except over strong accent backgrounds."
+        ]
+      },
+      "icons": {
+        "default": "#2766E1",
+        "onDisabled": "#ADB4BE",
+        "onInverse": "#FFFFFF",
+        "container": "#F5F7FB",
+        "DO_NOT": [
+          "Do not apply gradients to icons, except when specifically indicated in active tab/button state.",
+          "Do not use icon colors as text or card backgrounds."
+        ]
+      },
+      "shadows": {
+        "default": "0 4px 16px 0 rgba(30, 51, 110, 0.04)",
+        "hover": "0 6px 24px 0 rgba(30, 51, 110, 0.07)",
+        "DO_NOT": [
+          "Do not apply shadows to inline elements, text, or inside card content areas."
+        ]
+      }
+    },
+    "componentStates": {
+      "card": {
+        "default": {
+          "background": "#FFFFFF",
+          "border": "#E0E3EB",
+          "shadow": "0 4px 16px 0 rgba(30, 51, 110, 0.04)"
+        },
+        "hover": {
+          "shadow": "0 6px 24px 0 rgba(30, 51, 110, 0.07)"
+        },
+        "active": {
+          "border": "#2766E1"
+        },
+        "disabled": {
+          "background": "#F3F6FA",
+          "text": "#BFC6CF",
+          "shadow": "none"
+        },
+        "focus": {
+          "border": "#2766E1",
+          "shadow": "0 0 0 2px rgba(39, 102, 225, 0.21)"
+        }
+      },
+      "button": {
+        "referTo": "elementStyling.buttons"
+      },
+      "input": {
+        "referTo": "elementStyling.formInputs"
+      },
+      "calendarEventCard": {
+        "default": "refer to elementStyling.calendarEventCards.background",
+        "active": {
+          "background": "linear-gradient(90deg, #2766E1 0%, #18C8FF 100%)",
+          "text": "#FFFFFF"
+        },
+        "hover": {
+          "shadow": "0 2px 8px rgba(30,51,110,0.08)"
+        },
+        "disabled": {
+          "background": "#F3F6FA",
+          "text": "#BFC6CF"
+        }
+      }
+    },
+    "visualEffects": {
+      "gradients": [
+        {
+          "appliesTo": ["Primary buttons", "Active navigation tab", "Active calendar event card"],
+          "gradient": "linear-gradient(90deg, #2766E1 0%, #18C8FF 100%)",
+          "direction": "90deg",
+          "start": "#2766E1",
+          "end": "#18C8FF"
+        }
+      ],
+      "shadows": [
+        {
+          "appliesTo": ["Cards", "Calendar event active card"],
+          "shadow": "0 4px 16px 0 rgba(30, 51, 110, 0.04)"
+        }
+      ],
+      "borderRadius": [
+        {
+          "appliesTo": ["Cards", "Buttons", "Input fields", "Calendar event cards"],
+          "radius": "18px"
+        }
+      ],
+      "hoverAnimations": [
+        {
+          "appliesTo": ["All buttons", "Cards", "Calendar event cards"],
+          "effect": "shadow intensifies; background may darken/gradient shift for buttons"
+        }
+      ],
+      "DO_NOT": [
+        "Do not apply gradients to text, icons (except when active), or content backgrounds.",
+        "Do not apply shadow or border radius to navigation bar or sidebar."
+      ]
+    },
+    "selectors": {
+      ".app-main-bg": "elementStyling.appBackground.background",
+      ".card-container": "elementStyling.cardContainers",
+      ".calendar-event-card": "elementStyling.calendarEventCards",
+      ".nav-bar": "elementStyling.topBar",
+      ".tab-active": "elementStyling.navigation.activeTab",
+      ".tab-inactive": "elementStyling.navigation.inactiveTab",
+      ".btn-primary": "elementStyling.buttons.primary",
+      ".btn-secondary": "elementStyling.buttons.secondary",
+      ".input-default": "elementStyling.formInputs",
+      ".calendar-sidebar": "elementStyling.calendarSidebar",
+      ".text-h1": "elementStyling.text.heading1",
+      ".text-h2": "elementStyling.text.heading2",
+      ".text-body": "elementStyling.text.body",
+      ".icon-main": "elementStyling.icons.default",
+      ".icon-disabled": "elementStyling.icons.onDisabled"
+    },
+    "contrastGuidelines": {
+      "primaryTextOnWhite": "4.7:1 or greater",
+      "buttonTextOnGradient": "7.0:1 or greater",
+      "iconOnContainer": "4.5:1 or greater",
+      "inverseText": "Ensure #FFFFFF is only used when on gradients or solid backgrounds of minimum #2766E1 or darker."
+    },
+    "misusePrevention": {
+      "DO_NOT_GLOBAL": [
+        "Do not mix up card and button gradients: gradients only on buttons, active tabs, and active calendar cards.",
+        "Do not apply button or tab color schemes to normal text or body backgrounds.",
+        "Do not put shadows inside card content or on any inline text elements.",
+        "Do not use icon or disabled color for headings or navigation bars.",
+        "Do not use event card background colors for app backgrounds or inputs."
+      ]
+    }
+  } 

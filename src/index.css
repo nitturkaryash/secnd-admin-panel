@@ -1,0 +1,59 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --app-background: #F7F8FA;
+  --card-background: #FFFFFF;
+  --card-border: #E0E3EB;
+  --card-shadow: 0 4px 16px 0 rgba(30, 51, 110, 0.04);
+  --card-hover-shadow: 0 6px 24px 0 rgba(30, 51, 110, 0.07);
+  --card-border-radius: 18px;
+  --icon-container-background: #F5F7FB;
+  --icon-fill: #1977F3;
+  --primary-gradient: linear-gradient(90deg, #206EFF 0%, #18C8FF 100%);
+  --primary-gradient-hover: linear-gradient(90deg, #1666ce 0%, #1095c1 100%);
+  --primary-gradient-active: linear-gradient(90deg, #1756bb 0%, #0ea4c7 100%);
+  --primary-text-color: #FFFFFF;
+  --secondary-button-background: #E6F0FD;
+  --secondary-button-text-color: #1977F3;
+  --secondary-button-hover-background: #D6EBFF;
+  --secondary-button-active-background: #B5D9FF;
+  --disabled-button-background: #EEEEF5;
+  --disabled-button-text-color: #ADB4BE;
+  --form-input-background: #F5F7FB;
+  --form-input-border: #D1D9E0;
+  --form-input-text-color: #222C47;
+  --form-input-placeholder-color: #ADB4BE;
+  --form-input-focus-border: #206EFF;
+  --calendar-sidebar-background: #FFFFFF;
+  --calendar-sidebar-border: #E0E3EB;
+  --active-day-circle-background: #206EFF;
+  --active-day-circle-text-color: #FFFFFF;
+  --inactive-day-text-color: #222C47;
+  --heading1-text-color: #222C47;
+  --heading2-text-color: #394164;
+  --body-text-color: #5E6A81;
+  --inactive-text-color: #ADB4BE;
+  --subtle-text-color: #BFC6CF;
+  --event-check-health-background: rgba(140, 116, 250, 0.06);
+  --event-check-up-kid-background: rgba(237, 199, 81, 0.08);
+  --event-heart-check-up-background: rgba(71, 202, 132, 0.10);
+  --event-physical-control-health-background: linear-gradient(90deg, #206EFF 0%, #18C8FF 100%);
+  --event-body-condition-background: rgba(71, 202, 132, 0.07);
+  --event-check-your-teeth-background: rgba(71, 202, 132, 0.10);
+  --event-check-up-background: rgba(140, 116, 250,.06);
+}
+
+body {
+  background-color: var(--app-background);
+  font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif;
+  margin: 0;
+}
+
+#root {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+

@@ -1,0 +1,70 @@
+.app-main-bg {
+  background-color: var(--app-background);
+  min-height: 100vh;
+  width: 100%;
+}
+
+.nav-bar {
+  background-color: var(--card-background);
+  border-bottom: 1px solid var(--card-border);
+  width: 100%;
+}
+
+.card-container {
+  background-color: var(--card-background);
+  border: 1px solid var(--card-border);
+  border-radius: var(--card-border-radius);
+  box-shadow: var(--card-shadow);
+  transition: all 0.2s ease-in-out;
+}
+
+.card-container:hover {
+  box-shadow: var(--card-hover-shadow);
+}
+
+.btn-primary {
+  background: var(--primary-gradient);
+  color: var(--primary-text-color);
+}
+
+.btn-primary:hover {
+  background: var(--primary-gradient-hover);
+}
+
+.btn-primary:active {
+  background: var(--primary-gradient-active);
+}
+
+.btn-secondary {
+  background: var(--secondary-button-background);
+  color: var(--secondary-button-text-color);
+}
+
+.btn-secondary:hover {
+  background: var(--secondary-button-hover-background);
+}
+
+.btn-secondary:active {
+  background: var(--secondary-button-active-background);
+}
+
+.tab-active {
+  background: var(--primary-gradient);
+  color: var(--primary-text-color);
+}
+
+.tab-inactive {
+  background: transparent;
+  color: var(--heading1-text-color);
+}
+
+.tab-inactive:hover {
+  background: var(--secondary-button-background);
+  color: var(--secondary-button-text-color);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
