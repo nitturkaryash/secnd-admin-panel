@@ -3,6 +3,7 @@ import Header from './components/layout/header/Header';
 import Sidebar from './components/features/calendar/CalendarSidebar';
 import Calendar from './components/features/calendar/WeekCalendar';
 import PatientListPage from './components/features/patients/PatientListPage';
+
 import { colors, spacing, borderRadius, typography } from './styles/theme';
 import './index.css';
 
@@ -52,12 +53,15 @@ const App: React.FC = () => {
     }
     
     return (
-      <div style={{ 
-        display: 'flex', 
-        flex: 1, 
-        padding: '20px',
-        position: 'relative'
-      }}>
+      <div 
+        className="content-responsive"
+        style={{ 
+          display: 'flex', 
+          flex: 1, 
+          padding: spacing.lg,
+          position: 'relative'
+        }}
+      >
         <div style={sidebarStyles}>
           <Sidebar 
             selectedDate={selectedDate}

@@ -1,10 +1,8 @@
-
 /**
- * @file A virtualized list of patient cards.
+ * @file A virtualized list of patient cards using @dnd-kit.
  */
 import { useQueueStore } from '../../../store/useQueueStore';
-import { PatientCard } from './PatientCard';
-import { Droppable, DragDropContext } from 'react-beautiful-dnd';
+import { DraggablePatientCard } from './DraggablePatientCard';
 import { AutoSizer, List } from 'react-virtualized';
 
 export function PatientQueue() {
@@ -18,32 +16,27 @@ export function PatientQueue() {
     );
   }
 
+  /* stylelint-disable */
   const rowRenderer = ({ index, key, style }: any) => (
     <div key={key} style={style}>
-      <PatientCard patient={patients[index]} index={index} />
+      <DraggablePatientCard patient={patients[index]} />
     </div>
   );
+  /* stylelint-enable */
 
   return (
-    <DragDropContext onDragEnd={() => {}}>
-      <Droppable droppableId="patient-queue">
-        {(provided) => (
-          <div {...provided.droppableProps} ref={provided.innerRef} className="h-full">
-            <AutoSizer>
-              {({ height, width }) => (
-                <List
-                  height={height}
-                  width={width}
-                  rowCount={patients.length}
-                  rowHeight={120}
-                  rowRenderer={rowRenderer}
-                />
-              )}
-            </AutoSizer>
-            {provided.placeholder}
-          </div>
+    <div className="h-full">
+      <AutoSizer>
+        {({ height, width }) => (
+          <List
+            height={height}
+            width={width}
+            rowCount={patients.length}
+            rowHeight={120}
+            rowRenderer={rowRenderer}
+          />
         )}
-      </Droppable>
-    </DragDropContext>
+      </AutoSizer>
+    </div>
   );
 }

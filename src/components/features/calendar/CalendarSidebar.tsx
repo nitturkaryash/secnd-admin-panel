@@ -107,18 +107,20 @@ const CalendarSidebar: React.FC<CalendarSidebarProps> = ({
   const calendarGridStyles = {
     display: 'grid',
     gridTemplateColumns: 'repeat(7, 1fr)',
-    gap: spacing.xs,
-    marginBottom: spacing.lg
+    gap: '2px',
+    marginBottom: spacing.lg,
+    justifyItems: 'center',
+    alignItems: 'center'
   };
 
   const dayStyles = (date: Date) => ({
-    width: '32px',
-    height: '32px',
+    width: '28px',
+    height: '28px',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: '50%',
-    fontSize: typography.fontSize.sm,
+    fontSize: typography.fontSize.xs,
     fontWeight: typography.fontWeight.medium,
     cursor: 'pointer',
     border: 'none',
@@ -167,17 +169,27 @@ const CalendarSidebar: React.FC<CalendarSidebarProps> = ({
   });
 
   return (
-    <div style={{ width: '300px', marginRight: spacing.lg, display: 'flex', flexDirection: 'column', gap: '50px' }}>
-      <Card padding="lg">
-        <h3 style={{
-          fontSize: typography.fontSize.lg,
-          fontWeight: typography.fontWeight.semibold,
-          color: colors.text.primary,
-          marginBottom: spacing.lg,
-          margin: 0
-        }}>
-          Appointment Calendar
-        </h3>
+    <div 
+      className="sidebar-responsive"
+      style={{ 
+        width: '280px', 
+        marginRight: spacing.lg, 
+        display: 'flex', 
+        flexDirection: 'column', 
+        gap: '50px'
+      }}
+    >
+      <Card padding="md">
+        <div>
+          <h3 style={{
+            fontSize: typography.fontSize.lg,
+            fontWeight: typography.fontWeight.semibold,
+            color: colors.text.primary,
+            marginBottom: spacing.lg,
+            margin: 0
+          }}>
+            Appointment Calendar
+          </h3>
         
         <div style={calendarHeaderStyles}>
           {today.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
@@ -205,6 +217,7 @@ const CalendarSidebar: React.FC<CalendarSidebarProps> = ({
               {date.getDate()}
             </button>
           ))}
+        </div>
         </div>
       </Card>
       

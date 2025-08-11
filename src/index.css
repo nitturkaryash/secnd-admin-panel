@@ -57,3 +57,46 @@ body {
   min-height: 100vh;
 }
 
+/* Responsive spacing for sidebar */
+@media (max-width: 1024px) {
+  .sidebar-responsive {
+    margin-right: 32px !important;
+  }
+  .content-responsive {
+    gap: 32px !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .sidebar-responsive {
+    margin-right: 24px !important;
+  }
+  .content-responsive {
+    gap: 24px !important;
+  }
+}
+
+/* Ensure table cells are flush */
+table {
+  border-spacing: 0 !important;
+  border-collapse: collapse !important;
+}
+
+th, td {
+  margin: 0 !important;
+  border-spacing: 0 !important;
+}
+
+/* Calendar table specific styling */
+.calendar-table {
+  border-spacing: 0 !important;
+  border-collapse: collapse !important;
+}
+
+.calendar-table th,
+.calendar-table td {
+  margin: 0 !important;
+  border-spacing: 0 !important;
+  vertical-align: top !important;
+}
+

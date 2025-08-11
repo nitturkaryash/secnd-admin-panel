@@ -1,15 +1,18 @@
-
 /**
- * @file The main sidebar component.
+ * @file Integration component to connect PatientQueue with Calendar DnD
  */
+import React from 'react';
 import { DndContext, DragEndEvent, DragStartEvent, DragOverlay } from '@dnd-kit/core';
-import { PatientQueue } from '../../features/calendar/PatientQueue';
-import { PatientCard } from '../../features/calendar/PatientCard';
+import { PatientQueue } from './PatientQueue';
+import { PatientCard } from './PatientCard';
 import { useQueueStore } from '../../../store/useQueueStore';
 import { Patient } from '../../../lib/mockPatients';
-import React from 'react';
 
-export function Sidebar() {
+interface DnDIntegrationProps {
+  children: React.ReactNode;
+}
+
+export const DnDIntegration: React.FC<DnDIntegrationProps> = ({ children }) => {
   const { patients, assignedPatients, assignPatient, updatePatientAssignment } = useQueueStore();
   const [activePatient, setActivePatient] = React.useState<Patient | null>(null);
 
@@ -53,12 +56,9 @@ export function Sidebar() {
 
   return (
     <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-      <aside className="w-80 bg-gray-50 p-4 border-r border-gray-200">
-        <h2 className="text-lg font-semibold mb-4">Patient Appointments</h2>
-        <PatientQueue />
-      </aside>
+      {children}
       
-      {/* Drag Overlay for Sidebar */}
+      {/* Global Drag Overlay */}
       <DragOverlay>
         {activePatient ? (
           <div style={{ transform: 'rotate(5deg)' }}>
@@ -68,4 +68,4 @@ export function Sidebar() {
       </DragOverlay>
     </DndContext>
   );
-}
+};

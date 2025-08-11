@@ -48,14 +48,14 @@ const AppointmentPage: React.FC = () => {
 
   const contentStyles = {
     display: 'flex',
-    gap: spacing.lg,
+    gap: spacing.xxl,
     maxWidth: '1400px',
     margin: '0 auto'
   };
 
   return (
     <div style={pageStyles}>
-      <div style={contentStyles}>
+      <div className="content-responsive" style={contentStyles}>
         <CalendarSidebar 
           selectedDate={selectedDate}
           onDateSelect={handleDateSelect}
