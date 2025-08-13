@@ -2,18 +2,20 @@
 /**
  * @file A patient card component following the design system.
  */
-import { Patient } from '../../../lib/mockPatients';
+import React from 'react';
+import { PatientLegacy } from '../../../lib/types';
+import { colors, spacing, borderRadius, typography } from '../../../styles/theme';
 
 interface PatientCardProps {
-  patient: Patient;
+  patient: PatientLegacy;
   isDragging?: boolean;
-  onClick?: (patient: Patient) => void;
+  onClick?: (patient: PatientLegacy) => void;
 }
 
 const priorityColors = {
-  Low: 'bg-blue-50 text-blue-700 border-blue-200',
-  Medium: 'bg-yellow-50 text-yellow-700 border-yellow-200', 
-  High: 'bg-red-50 text-red-700 border-red-200',
+  Low: { background: 'rgba(59, 130, 246, 0.1)', color: '#2563eb', border: '#93c5fd' },
+  Medium: { background: 'rgba(245, 158, 11, 0.1)', color: '#d97706', border: '#fbbf24' },
+  High: { background: 'rgba(239, 68, 68, 0.1)', color: '#dc2626', border: '#fca5a5' },
 };
 
 export function PatientCard({ patient, isDragging = false, onClick }: PatientCardProps) {
@@ -24,66 +26,139 @@ export function PatientCard({ patient, isDragging = false, onClick }: PatientCar
     }
   };
 
+  const priorityStyle = priorityColors[patient.priority];
+  const requestedTime = new Date(patient.requestedTime || patient.appointmentDateTime);
+
   return (
     <div
-      className={`
-        bg-white border border-gray-200 rounded-[18px] p-4 mb-2 transition-all duration-200
-        ${isDragging 
-          ? 'shadow-lg scale-105 opacity-90' 
-          : 'shadow-sm hover:shadow-md'
-        }
-        ${onClick ? 'cursor-pointer hover:bg-gray-50' : ''}
-      `}
       style={{
-        background: '#FFFFFF',
-        borderColor: '#E0E3EB',
+        background: colors.background.card,
+        border: `1px solid ${colors.border.card}`,
+        borderRadius: borderRadius.lg,
+        padding: spacing.md,
+        marginBottom: spacing.sm,
         boxShadow: isDragging 
-          ? '0 6px 24px 0 rgba(30, 51, 110, 0.07)' 
-          : '0 4px 16px 0 rgba(30, 51, 110, 0.04)',
+          ? '0 8px 25px rgba(0, 0, 0, 0.15)' 
+          : '0 2px 8px rgba(0, 0, 0, 0.05)',
+        transform: isDragging ? 'scale(1.02)' : 'scale(1)',
+        opacity: isDragging ? 0.9 : 1,
+        transition: 'all 0.2s ease-in-out',
+        cursor: onClick ? 'pointer' : 'default'
       }}
       onClick={handleCardClick}
+      onMouseEnter={(e) => {
+        if (!isDragging) {
+          e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.1)';
+        }
+      }}
+      onMouseLeave={(e) => {
+        if (!isDragging) {
+          e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.05)';
+        }
+      }}
     >
-      <div className="flex items-center">
-        <img 
-          src={patient.avatar} 
-          alt={patient.name} 
-          className="w-10 h-10 rounded-full mr-3 flex-shrink-0" 
-        />
-        <div className="flex-1 min-w-0">
-          <p 
-            className="font-semibold text-sm truncate"
-            style={{ color: '#222C47' }}
-          >
-            {patient.name}
-          </p>
-          <p 
-            className="text-xs truncate"
-            style={{ color: '#5E6A81' }}
-          >
-            {new Date(patient.appointmentDateTime).toLocaleString('en-US', {
-              month: 'short',
-              day: 'numeric',
-              hour: '2-digit',
-              minute: '2-digit',
-              hour12: true
-            })}
-          </p>
+      <div style={{ display: 'flex', alignItems: 'center', marginBottom: spacing.xs }}>
+        <div style={{
+          width: '40px',
+          height: '40px',
+          borderRadius: '50%',
+          overflow: 'hidden',
+          marginRight: spacing.sm,
+          flexShrink: 0,
+          border: `2px solid ${colors.border.card}`
+        }}>
+          {patient.avatar ? (
+            <img 
+              src={patient.avatar} 
+              alt={patient.name} 
+              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+            />
+          ) : (
+            <div style={{
+              width: '100%',
+              height: '100%',
+              background: colors.primary.gradient,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: colors.text.inverse,
+              fontSize: typography.fontSize.sm,
+              fontWeight: typography.fontWeight.semibold
+            }}>
+              {patient.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
+            </div>
+          )}
         </div>
-        <span
-          className={`
-            text-xs font-medium px-2 py-1 rounded-full border flex-shrink-0
-            ${priorityColors[patient.priority]}
-          `}
-        >
+        
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{
+            fontSize: typography.fontSize.md,
+            fontWeight: typography.fontWeight.semibold,
+            color: colors.text.primary,
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap'
+          }}>
+            {patient.name}
+          </div>
+          <div style={{
+            fontSize: typography.fontSize.xs,
+            color: colors.text.body,
+            display: 'flex',
+            alignItems: 'center',
+            gap: spacing.xs,
+            marginTop: '2px'
+          }}>
+            <span>{patient.age} yrs</span>
+            <span>•</span>
+            <span>{patient.gender}</span>
+            <span>•</span>
+            <span>#{patient.serialNo}</span>
+          </div>
+        </div>
+        
+        <div style={{
+          background: priorityStyle.background,
+          color: priorityStyle.color,
+          border: `1px solid ${priorityStyle.border}`,
+          borderRadius: borderRadius.sm,
+          padding: `${spacing.xs} ${spacing.sm}`,
+          fontSize: typography.fontSize.xs,
+          fontWeight: typography.fontWeight.medium,
+          flexShrink: 0
+        }}>
           {patient.priority}
-        </span>
+        </div>
       </div>
-      <p 
-        className="text-xs mt-2 line-clamp-2"
-        style={{ color: '#5E6A81' }}
-      >
-        {patient.symptoms}
-      </p>
+      
+      <div style={{
+        fontSize: typography.fontSize.xs,
+        color: colors.text.inactive,
+        marginBottom: spacing.xs
+      }}>
+        Requested: {requestedTime.toLocaleString('en-US', {
+          month: 'short',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: true
+        })}
+      </div>
+      
+      {patient.symptoms && (
+        <div style={{
+          fontSize: typography.fontSize.sm,
+          color: colors.text.body,
+          lineHeight: 1.4,
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          display: '-webkit-box',
+          WebkitLineClamp: 2,
+          WebkitBoxOrient: 'vertical'
+        }}>
+          {patient.symptoms}
+        </div>
+      )}
     </div>
   );
 }

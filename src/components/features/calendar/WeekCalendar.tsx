@@ -2,10 +2,12 @@ import React, { useState, useMemo, useEffect, useRef, useCallback, useLayoutEffe
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, DragOverEvent } from '@dnd-kit/core';
 import { colors, spacing, borderRadius, typography } from '../../../styles/theme';
 import { useQueueStore } from '../../../store/useQueueStore';
-import { Patient, AppointmentStatus } from '../../../lib/mockPatients';
+import { useApiStore } from '../../../store/useApiStore';
+import { appointmentsApi } from '../../../lib/api';
+import { PatientLegacy } from '../../../lib/types';
 import { DroppableTimeSlot } from './DroppableTimeSlot';
-import { PatientCard } from './PatientCard';
 import AppointmentEditDrawer from './AppointmentEditDrawer';
+import NewAppointmentModal from './NewAppointmentModal';
 import { SpanningAppointmentCard } from './SpanningAppointmentCard';
 
 interface CalendarEvent {
@@ -29,7 +31,10 @@ interface WeekCalendarProps {
   selectedWeek?: Date;
   onEventClick: (event: CalendarEvent) => void;
   sidebarCollapsed?: boolean;
+  sidebarHidden?: boolean;
   onToggleSidebar?: () => void;
+  onToggleSidebarVisibility?: () => void;
+  onWeekChange?: (newDate: Date) => void;
 }
 
 
@@ -38,31 +43,47 @@ const WeekCalendar: React.FC<WeekCalendarProps> = ({
   selectedWeek: _selectedWeek = new Date(), 
   onEventClick: _onEventClick,
   sidebarCollapsed = false,
-  onToggleSidebar
+  sidebarHidden = false,
+  onToggleSidebar,
+  onToggleSidebarVisibility,
+  onWeekChange
 }) => {
   const { patients, assignedPatients, assignPatient, updatePatientAssignment, updatePatient } = useQueueStore();
   
 
-  const [selectedAppointment, setSelectedAppointment] = useState<Patient | null>(null);
-  const [editingPatient, setEditingPatient] = useState<Patient | null>(null);
+  const [selectedAppointment, setSelectedAppointment] = useState<PatientLegacy | null>(null);
+  const [editingPatient, setEditingPatient] = useState<PatientLegacy | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [isNewAppointmentModalOpen, setIsNewAppointmentModalOpen] = useState(false);
   // Highlighting removed - appointments now span visually
   const [visibleSlots, setVisibleSlots] = useState(56); // Start with 56 slots (8 AM to 10 PM, can extend to 11 PM)
   const [hasReachedEnd, setHasReachedEnd] = useState(false);
-  const [currentTime, setCurrentTime] = useState(new Date());
-  const [activePatient, setActivePatient] = useState<Patient | null>(null);
+  const [activePatient, setActivePatient] = useState<PatientLegacy | null>(null);
   const [dragOverTarget, setDragOverTarget] = useState<{ doctorIndex: number; doctorId: string; timeKey: string; spanSlots: number } | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const tableRef = useRef<HTMLTableElement>(null);
+  
+  // Log when component mounts and appointments change
+  useEffect(() => {
+    console.log('WeekCalendar mounted or appointments changed');
+    console.log('Assigned patients:', assignedPatients.length);
+    assignedPatients.forEach(patient => {
+      console.log(`Patient: ${patient.name}, Doctor: ${patient.assignedDoctor}, Time: ${patient.appointmentDateTime}`);
+    });
+  }, [assignedPatients]);
 
-  // Doctors (static) – declared before any hooks that depend on it
-  const doctors: Doctor[] = [
-    { id: '1', name: 'Dr. Ahmad Kamal', specialty: 'Cardiologist', avatar: 'AK' },
-    { id: '2', name: 'Dr. Sarah Wilson', specialty: 'Pediatrician', avatar: 'SW' },
-    { id: '3', name: 'Dr. Michael Chen', specialty: 'Dentist', avatar: 'MC' },
-    { id: '4', name: 'Dr. Emily Rodriguez', specialty: 'Neurologist', avatar: 'ER' },
-    { id: '5', name: 'Dr. James Thompson', specialty: 'Orthopedist', avatar: 'JT' }
-  ];
+  // Get doctors from API store
+  const { doctors: apiDoctors } = useApiStore();
+  
+  // Map API doctors to the format expected by the component
+  const doctors: Doctor[] = useMemo(() => {
+    return apiDoctors.map(doctor => ({
+      id: doctor.id,
+      name: doctor.name,
+      specialty: doctor.specialty,
+      avatar: doctor.avatar || doctor.name.split(' ').map(n => n[0]).join('')
+    }));
+  }, [apiDoctors]);
 
   // Measured grid metrics for precise snapping
   const [gridMetrics, setGridMetrics] = useState<{
@@ -142,14 +163,7 @@ const WeekCalendar: React.FC<WeekCalendarProps> = ({
     }
   }, [handleScroll]);
 
-  // Update current time every minute
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 60000); // Update every minute
 
-    return () => clearInterval(interval);
-  }, []);
 
 
 
@@ -189,7 +203,7 @@ const WeekCalendar: React.FC<WeekCalendarProps> = ({
 
   
   // Helper: compute span info for a patient (depends on extendedTimeSlots)
-  const computeSpanForPatient = useCallback((p: Patient) => {
+  const computeSpanForPatient = useCallback((p: PatientLegacy) => {
     const appointmentTime = new Date(p.appointmentDateTime);
     const startHour = appointmentTime.getHours();
     const startMinute = Math.floor(appointmentTime.getMinutes() / 15) * 15;
@@ -224,7 +238,11 @@ const WeekCalendar: React.FC<WeekCalendarProps> = ({
       return extendedTimeSlots.findIndex(slot => slot.key === timeKey);
     };
 
+    console.log('Processing assigned patients:', assignedPatients.length);
+    
     return assignedPatients.map(patient => {
+      console.log('Processing patient:', patient.name, 'Appointment time:', patient.appointmentDateTime);
+      
       const appointmentTime = new Date(patient.appointmentDateTime);
       const startHour = appointmentTime.getHours();
       const startMinute = Math.floor(appointmentTime.getMinutes() / 15) * 15;
@@ -243,6 +261,8 @@ const WeekCalendar: React.FC<WeekCalendarProps> = ({
 
       const startSlotIndex = getSlotIndex(startTimeKey);
       
+      console.log(`Patient ${patient.name} - Time: ${startTimeKey}, Slot index: ${startSlotIndex}, Visible: ${startSlotIndex >= 0}`);
+      
       return {
         ...patient,
         startTimeKey,
@@ -260,8 +280,22 @@ const WeekCalendar: React.FC<WeekCalendarProps> = ({
     
     doctors.forEach(doctor => {
       grouped[doctor.id] = appointmentsWithSpans.filter(
-        apt => apt.assignedDoctor === doctor.id && apt.isVisible
+        apt => {
+          // Debug the appointment data
+          console.log(`Appointment: ${apt.name}, Doctor ID: ${apt.assignedDoctor}, Doctor: ${doctor.id}, isVisible: ${apt.isVisible}`);
+          
+          // Check if the doctor ID matches - convert to string for safe comparison
+          // This is critical because the IDs might be UUIDs from the database
+          const doctorMatches = String(apt.assignedDoctor) === String(doctor.id);
+          
+          return doctorMatches && apt.isVisible;
+        }
       );
+    });
+    
+    // Log the grouped appointments for debugging
+    Object.keys(grouped).forEach(doctorId => {
+      console.log(`Doctor ${doctorId} has ${grouped[doctorId].length} appointments`);
     });
     
     return grouped;
@@ -274,7 +308,8 @@ const WeekCalendar: React.FC<WeekCalendarProps> = ({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: spacing.lg,
-    padding: `0 ${sidebarCollapsed ? spacing.xxl : spacing.lg}`
+    padding: `0 ${spacing.lg}`,
+    transition: 'padding 0.3s ease-in-out'
   };
 
   const toggleButtonStyles = {
@@ -361,33 +396,6 @@ const WeekCalendar: React.FC<WeekCalendarProps> = ({
     borderRight: 'none' // Remove right border for last column in last row
   };
 
-  const appointmentCardStyles = (status: AppointmentStatus) => {
-    const statusColors = {
-      Booked: { background: 'rgba(140, 116, 250, 0.06)', border: '1px solid rgba(140, 116, 250, 0.2)' },
-      'Checked-in': { background: 'rgba(237, 199, 81, 0.08)', border: '1px solid rgba(237, 199, 81, 0.2)' },
-      Completed: { background: 'rgba(71, 202, 132, 0.10)', border: '1px solid rgba(71, 202, 132, 0.2)' },
-      Cancelled: { background: 'rgba(244, 67, 54, 0.06)', border: '1px solid rgba(244, 67, 54, 0.2)' }
-    };
-    
-    return {
-      background: statusColors[status].background,
-      border: statusColors[status].border,
-      borderRadius: borderRadius.sm,
-      padding: '4px 8px', // Slightly more horizontal padding
-      margin: '2px', // Slightly more margin for better spacing
-      fontSize: '10px',
-      color: colors.text.primary,
-      cursor: 'pointer',
-      transition: 'all 0.2s ease-in-out',
-      maxWidth: 'calc(100% - 8px)', // Account for margins (2px on each side)
-      overflow: 'hidden',
-      textOverflow: 'ellipsis',
-      whiteSpace: 'nowrap' as const
-    };
-  };
-
-
-
   const modalStyles = {
     position: 'fixed' as const,
     top: 0,
@@ -422,11 +430,7 @@ const WeekCalendar: React.FC<WeekCalendarProps> = ({
     marginLeft: spacing.sm
   };
 
-  const handleAppointmentClick = (patient: Patient) => {
-    setSelectedAppointment(patient);
-  };
-
-  const handleEditAppointment = (patient: Patient) => {
+  const handleEditAppointment = (patient: PatientLegacy) => {
     setEditingPatient(patient);
     setIsDrawerOpen(true);
   };
@@ -436,11 +440,49 @@ const WeekCalendar: React.FC<WeekCalendarProps> = ({
     setEditingPatient(null);
   };
 
-  const handleAppointmentSave = (updatedPatient: Patient) => {
+  const handleAppointmentSave = (updatedPatient: PatientLegacy) => {
     // Update the patient in the store
     updatePatient(updatedPatient);
     setIsDrawerOpen(false);
     setEditingPatient(null);
+  };
+  
+  const handleCreateAppointment = async (patientId: string, doctorId: string, dateTime: string, endTime: string) => {
+    try {
+      console.log('Creating appointment with full dateTime:', dateTime);
+      
+      // Create a custom implementation that directly uses the appointmentsApi
+      const date = new Date(dateTime);
+      const [endHours, endMinutes] = endTime.split(':').map(Number);
+      
+      // Create end time by cloning the date and setting the end time hours/minutes
+      const endDateTime = new Date(date);
+      endDateTime.setHours(endHours, endMinutes, 0, 0);
+      
+      console.log('Start time:', date.toISOString());
+      console.log('End time:', endDateTime.toISOString());
+      
+      // Directly use the appointments API to create the appointment
+      await appointmentsApi.assignPatient(
+        patientId,
+        doctorId,
+        date.toISOString(),
+        endDateTime.toISOString()
+      );
+      
+      // Refresh all data to update the calendar
+      await Promise.all([
+        useApiStore.getState().loadAppointments(),
+        useApiStore.getState().loadPatientQueue(),
+        useApiStore.getState().loadAssignedPatients(),
+        useQueueStore.getState().refreshData()
+      ]);
+      
+      console.log('New appointment created successfully and data refreshed');
+    } catch (error) {
+      console.error('Failed to create appointment:', error);
+      throw error;
+    }
   };
 
   const closeModal = () => {
@@ -523,14 +565,6 @@ const WeekCalendar: React.FC<WeekCalendarProps> = ({
         assignPatient(patientId, doctorId, timeKey);
       }
     }
-  };
-
-  const renderAppointmentCard = (patient: Patient) => {
-    return (
-      <div key={patient.id} className="mb-1">
-        <PatientCard patient={patient} />
-      </div>
-    );
   };
 
   // No longer need highlighting - appointments will be rendered as spanning cards
@@ -633,31 +667,6 @@ const WeekCalendar: React.FC<WeekCalendarProps> = ({
     );
   };
 
-  // Check if current time is within clinic hours (8 AM to 10 PM)
-  const isCurrentTimeInRange = () => {
-    const currentHour = currentTime.getHours();
-    return currentHour >= 8 && currentHour < 22; // 8 AM to 10 PM
-  };
-
-  // Calculate the position of the "Now Line" based on current time
-  const getCurrentTimePosition = () => {
-    if (!isCurrentTimeInRange()) return -1;
-    
-    const currentHour = currentTime.getHours();
-    const currentMinute = currentTime.getMinutes();
-    
-    // Calculate total minutes since 8 AM
-    const totalMinutesSince8AM = (currentHour - 8) * 60 + currentMinute;
-    
-    // Calculate position as percentage of total day (8 AM to 10 PM = 14 hours = 840 minutes)
-    const totalDayMinutes = 14 * 60; // 14 hours in minutes
-    const position = (totalMinutesSince8AM / totalDayMinutes) * 100;
-    
-    return Math.max(0, Math.min(100, position));
-  };
-
-
-
   // End of day message styles
   const endOfDayMessageStyles = {
     background: colors.background.input,
@@ -672,6 +681,22 @@ const WeekCalendar: React.FC<WeekCalendarProps> = ({
     boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
   };
 
+  const handlePrevWeek = () => {
+    if (onWeekChange) {
+      const newDate = new Date(_selectedWeek);
+      newDate.setDate(newDate.getDate() - 7);
+      onWeekChange(newDate);
+    }
+  };
+
+  const handleNextWeek = () => {
+    if (onWeekChange) {
+      const newDate = new Date(_selectedWeek);
+      newDate.setDate(newDate.getDate() + 7);
+      onWeekChange(newDate);
+    }
+  };
+
   return (
     <DndContext onDragStart={handleDragStart} onDragOver={handleDragOver} onDragEnd={handleDragEnd}>
       <div style={{ 
@@ -679,11 +704,39 @@ const WeekCalendar: React.FC<WeekCalendarProps> = ({
         display: 'flex', 
         flexDirection: 'column',
         height: '100vh',
-        overflow: 'hidden'
+        overflow: 'hidden',
+        position: 'relative',
+        transition: 'all 0.3s ease-in-out'
       }}>
         <div style={headerStyles}>
-        <div style={{ display: 'flex', alignItems: 'center' }}>
-          {onToggleSidebar && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: spacing.sm }}>
+          {onToggleSidebarVisibility && (
+            <button
+              onClick={onToggleSidebarVisibility}
+              style={{
+                ...toggleButtonStyles,
+                background: sidebarHidden ? colors.primary.main : colors.background.card,
+                color: sidebarHidden ? colors.text.inverse : colors.primary.main,
+                border: `1px solid ${sidebarHidden ? colors.primary.main : colors.border.card}`
+              }}
+              onMouseEnter={(e) => {
+                if (!sidebarHidden) {
+                  e.currentTarget.style.background = colors.background.icon;
+                  e.currentTarget.style.boxShadow = '0 4px 16px 0 rgba(30, 51, 110, 0.07)';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!sidebarHidden) {
+                  e.currentTarget.style.background = colors.background.card;
+                  e.currentTarget.style.boxShadow = '0 2px 8px 0 rgba(30, 51, 110, 0.04)';
+                }
+              }}
+              title={sidebarHidden ? 'Show Calendar Sidebar' : 'Hide Calendar Sidebar'}
+            >
+              📅
+            </button>
+          )}
+          {onToggleSidebar && !sidebarHidden && (
             <button
               onClick={onToggleSidebar}
               style={toggleButtonStyles}
@@ -704,13 +757,19 @@ const WeekCalendar: React.FC<WeekCalendarProps> = ({
         </div>
         
         <div style={{ display: 'flex', alignItems: 'center', gap: spacing.md }}>
-          <span style={{ 
-            fontSize: typography.fontSize.lg, 
-            color: colors.text.primary,
-            fontWeight: typography.fontWeight.medium 
-          }}>
-            August 2024
-          </span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: spacing.sm }}>
+            <button onClick={handlePrevWeek} style={filterButtonStyles}>‹</button>
+            <span style={{ 
+              fontSize: typography.fontSize.lg, 
+              color: colors.text.primary,
+              fontWeight: typography.fontWeight.medium,
+              minWidth: '150px',
+              textAlign: 'center'
+            }}>
+              {_selectedWeek.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+            </span>
+            <button onClick={handleNextWeek} style={filterButtonStyles}>›</button>
+          </div>
           
           <div style={{ display: 'flex', alignItems: 'center' }}>
             <button style={filterButtonStyles}>None</button>
@@ -718,46 +777,21 @@ const WeekCalendar: React.FC<WeekCalendarProps> = ({
             <button style={filterButtonStyles}>Deadline</button>
           </div>
           
-          <button style={{
-            background: colors.primary.gradient,
-            color: colors.text.inverse,
-            border: 'none',
-            borderRadius: borderRadius.lg,
-            padding: `${spacing.sm} ${spacing.md}`,
-            fontSize: typography.fontSize.md,
-            fontWeight: typography.fontWeight.medium,
-            cursor: 'pointer',
-            transition: 'all 0.2s ease-in-out'
-          }}>
-            Check new
-          </button>
-          
-          {/* Debug: Test drawer button */}
           <button 
-            onClick={() => {
-              console.log('🧪 Test button clicked. Assigned patients:', assignedPatients.length);
-              if (assignedPatients.length > 0) {
-                const testPatient = assignedPatients[0];
-                console.log('🧪 Testing with patient:', testPatient.name);
-                handleEditAppointment(testPatient);
-              } else {
-                console.log('❌ No assigned patients found!');
-                alert('No assigned patients found. Check console for details.');
-              }
-            }}
+            onClick={() => setIsNewAppointmentModalOpen(true)}
             style={{
-              background: '#ff6b6b',
-              color: 'white',
+              background: colors.primary.gradient,
+              color: colors.text.inverse,
               border: 'none',
               borderRadius: borderRadius.lg,
               padding: `${spacing.sm} ${spacing.md}`,
-              fontSize: typography.fontSize.sm,
+              fontSize: typography.fontSize.md,
               fontWeight: typography.fontWeight.medium,
               cursor: 'pointer',
-              marginLeft: spacing.sm
+              transition: 'all 0.2s ease-in-out'
             }}
           >
-            🧪 Test Drawer
+            Create New Appointment
           </button>
           
 
@@ -767,14 +801,17 @@ const WeekCalendar: React.FC<WeekCalendarProps> = ({
       <div style={{ 
         flex: 1,
         overflow: 'hidden',
-        position: 'relative'
+        position: 'relative',
+        minHeight: 0 // This is crucial for flex children to shrink properly
       }}>
         <div 
           ref={scrollContainerRef}
           style={{ 
             height: '100%',
             overflow: 'auto',
-            position: 'relative'
+            position: 'relative',
+            paddingBottom: spacing.lg,
+            boxSizing: 'border-box'
           }}
         >
                       <table 
@@ -783,11 +820,12 @@ const WeekCalendar: React.FC<WeekCalendarProps> = ({
                         style={{ 
               width: '100%', 
               borderCollapse: 'collapse',
-              minWidth: '800px',
+              minWidth: sidebarHidden ? '900px' : '800px',
               background: colors.background.card,
               position: 'relative',
               tableLayout: 'fixed',
-              borderSpacing: 0
+              borderSpacing: 0,
+              marginBottom: spacing.lg
             }}>
                         <thead>
               <tr>
@@ -982,6 +1020,12 @@ const WeekCalendar: React.FC<WeekCalendarProps> = ({
         onSave={handleAppointmentSave}
       />
       
+      {/* New Appointment Modal */}
+      <NewAppointmentModal
+        isOpen={isNewAppointmentModalOpen}
+        onClose={() => setIsNewAppointmentModalOpen(false)}
+        onSave={handleCreateAppointment}
+      />
 
       </div>
     </DndContext>

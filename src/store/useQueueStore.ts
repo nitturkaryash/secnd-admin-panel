@@ -1,157 +1,150 @@
-
 /**
- * @file Zustand store for managing the patient queue.
+ * @file Updated Zustand store that bridges old interface with new Supabase API.
  */
 import { create } from 'zustand';
-import { mockPatients, Patient } from '../lib/mockPatients';
+import { useApiStore } from './useApiStore';
+import type { PatientLegacy } from '../lib/types';
 import { showToast } from '../lib/toast';
 
 interface QueueState {
-  patients: Patient[];
-  assignedPatients: Patient[];
+  patients: PatientLegacy[];
+  assignedPatients: PatientLegacy[];
   assignPatient: (patientId: string, doctorId: string, timeKey: string) => void;
   unassignPatient: (patientId: string) => void;
   updatePatientAssignment: (patientId: string, doctorId: string, timeKey: string) => void;
-  updatePatient: (updatedPatient: Patient) => void;
+  updatePatient: (updatedPatient: PatientLegacy) => void;
+  // New methods for data loading
+  loadData: () => Promise<void>;
+  refreshData: () => Promise<void>;
+  isLoading: boolean;
 }
 
 export const useQueueStore = create<QueueState>((set, get) => {
-  const initialPatients = mockPatients.filter(p => !p.assignedDoctor || p.status === 'Cancelled');
-  const initialAssignedPatients = mockPatients.filter(p => p.assignedDoctor && p.status !== 'Cancelled');
-  
-  // Store initialized with patients
-  
   return {
-    patients: initialPatients,
-    assignedPatients: initialAssignedPatients,
+    patients: [],
+    assignedPatients: [],
+    isLoading: false,
     
-    assignPatient: (patientId: string, doctorId: string, timeKey: string) => {
-      const state = get();
-      const patient = state.patients.find(p => p.id === patientId);
-      
-      if (patient) {
-        // Helpers
-        const toMinutes = (t: string) => { const [h, m] = t.split(':').map(Number); return h * 60 + m; };
-        const minutesToTime = (min: number) => {
-          const h = Math.floor(min / 60) % 24; const m = min % 60; return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
-        };
-        const timeKeyFromISO = (iso: string) => { const d = new Date(iso); return `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`; };
-        const defaultDuration = 60;
-
-        const durationMin = patient.endTime ? (toMinutes(patient.endTime) - toMinutes(timeKeyFromISO(patient.appointmentDateTime))) : defaultDuration;
-
-        // Overlap prevention: compute proposed range and ensure it does not intersect existing appointments for this doctor
-        const newStartMin = toMinutes(timeKey);
-        const newEndMin = newStartMin + Math.max(15, durationMin);
-        const hasOverlap = state.assignedPatients.some(p => {
-          if (p.assignedDoctor !== doctorId) return false;
-          if (p.id === patientId) return false;
-          const pStart = toMinutes(timeKeyFromISO(p.appointmentDateTime));
-          const pEnd = p.endTime ? toMinutes(p.endTime) : pStart + defaultDuration;
-          return newStartMin < pEnd && newEndMin > pStart; // overlap if ranges intersect
-        });
-        if (hasOverlap) {
-          showToast('This time overlaps an existing appointment for the doctor.', 'error');
-          return; // do not assign
-        }
-
-        const [hours, minutes] = timeKey.split(':').map(Number);
-        const appointmentDate = new Date();
-        appointmentDate.setHours(hours, minutes, 0, 0);
-        const endTime = minutesToTime(toMinutes(timeKey) + Math.max(15, durationMin));
+    // Load initial data from API
+    loadData: async () => {
+      set({ isLoading: true });
+      try {
+        const apiStore = useApiStore.getState();
+        await apiStore.loadPatientQueue();
+        await apiStore.loadAssignedPatients();
+        await apiStore.loadAppointments();
         
-        const updatedPatient = {
-          ...patient,
-          assignedDoctor: doctorId,
-          appointmentDateTime: appointmentDate.toISOString(),
-          status: 'Booked' as const,
-          endTime,
-        };
+        const patients = apiStore.getLegacyPatients();
+        const assignedPatients = apiStore.getLegacyAssignedPatients();
+        
+        console.log('Loaded patients:', patients.length);
+        console.log('Loaded assigned patients:', assignedPatients.length);
+        
+        set({ 
+          patients,
+          assignedPatients,
+          isLoading: false 
+        });
+      } catch (error) {
+        console.error('Failed to load data:', error);
+        showToast('Failed to load patient data', 'error');
+        set({ isLoading: false });
+      }
+    },
 
-        set(state => ({
-          patients: state.patients.filter(p => p.id !== patientId),
-          assignedPatients: [...state.assignedPatients, updatedPatient],
-        }));
+    // Refresh data
+    refreshData: async () => {
+      await get().loadData();
+    },
+    
+    assignPatient: async (patientId: string, doctorId: string, timeKey: string) => {
+      // Optimistic UI update
+      const prevPatients = get().patients;
+      set({
+        patients: prevPatients.map(p => p.id === patientId ? { ...p, assignedDoctor: doctorId } : p)
+      });
+      try {
+        const apiStore = useApiStore.getState();
+        await apiStore.assignPatient(patientId, doctorId, timeKey);
+        // Refresh local state (patient will likely move out of queue)
+        await get().refreshData();
+        showToast('Patient assigned successfully!');
+      } catch (error) {
+        // Revert on failure
+        set({ patients: prevPatients });
+        console.error('Failed to assign patient:', error);
+        showToast('Failed to assign patient', 'error');
+      }
+    },
+
+    unassignPatient: async (patientId: string) => {
+      try {
+        const apiStore = useApiStore.getState();
+        const { appointments } = apiStore;
+        
+        // Find and delete the appointment for this patient
+        const appointment = appointments.find(apt => apt.patient_id === patientId);
+        if (appointment) {
+          await apiStore.deleteAppointment(appointment.id);
+          await get().refreshData();
+          showToast('Patient unassigned successfully');
+        }
+      } catch (error) {
+        console.error('Failed to unassign patient:', error);
+        showToast('Failed to unassign patient', 'error');
       }
     },
     
-    unassignPatient: (patientId: string) => {
-      const state = get();
-      const patient = state.assignedPatients.find(p => p.id === patientId);
-      
-      if (patient) {
-        const unassignedPatient = {
-          ...patient,
-          assignedDoctor: '',
-          status: 'Booked' as const,
-        };
-
-        set(state => ({
-          assignedPatients: state.assignedPatients.filter(p => p.id !== patientId),
-          patients: [...state.patients, unassignedPatient],
-        }));
+    updatePatientAssignment: async (patientId: string, doctorId: string, timeKey: string) => {
+      // Optimistic UI update
+      const prevPatients = get().patients;
+      set({
+        patients: prevPatients.map(p => p.id === patientId ? { ...p, assignedDoctor: doctorId } : p)
+      });
+      try {
+        const apiStore = useApiStore.getState();
+        await apiStore.updatePatientAssignment(patientId, doctorId, timeKey);
+        // Refresh local state
+        await get().refreshData();
+        showToast('Assignment updated successfully!');
+      } catch (error) {
+        set({ patients: prevPatients });
+        console.error('Failed to update assignment:', error);
+        showToast('Failed to update assignment', 'error');
       }
     },
     
-    updatePatientAssignment: (patientId: string, doctorId: string, timeKey: string) => {
-      const state = get();
-      const patient = state.assignedPatients.find(p => p.id === patientId);
-      
-      if (patient) {
-        // Helpers
-        const toMinutes = (t: string) => { const [h, m] = t.split(':').map(Number); return h * 60 + m; };
-        const minutesToTime = (min: number) => {
-          const h = Math.floor(min / 60) % 24; const m = min % 60; return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
-        };
-        const timeKeyFromISO = (iso: string) => { const d = new Date(iso); return `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`; };
-
-        const prevStart = timeKeyFromISO(patient.appointmentDateTime);
-        const durationMin = patient.endTime ? (toMinutes(patient.endTime) - toMinutes(prevStart)) : 60;
-
-        // Overlap prevention for reassign
-        const newStartMin = toMinutes(timeKey);
-        const newEndMin = newStartMin + Math.max(15, durationMin);
-        const hasOverlap = state.assignedPatients.some(p => {
-          if (p.assignedDoctor !== doctorId) return false;
-          if (p.id === patientId) return false;
-          const pStart = toMinutes(timeKeyFromISO(p.appointmentDateTime));
-          const pEnd = p.endTime ? toMinutes(p.endTime) : pStart + 60;
-          return newStartMin < pEnd && newEndMin > pStart;
-        });
-        if (hasOverlap) {
-          showToast('This time overlaps an existing appointment for the doctor.', 'error');
-          return; // reject move
-        }
-
-        const [hours, minutes] = timeKey.split(':').map(Number);
-        const appointmentDate = new Date();
-        appointmentDate.setHours(hours, minutes, 0, 0);
-        const endTime = minutesToTime(toMinutes(timeKey) + Math.max(15, durationMin));
+    updatePatient: async (updatedPatient: PatientLegacy) => {
+      try {
+        const apiStore = useApiStore.getState();
         
-        const updatedPatient = {
-          ...patient,
-          assignedDoctor: doctorId,
-          appointmentDateTime: appointmentDate.toISOString(),
-          endTime,
+        // Convert legacy patient back to database format
+        const patientUpdates = {
+          name: updatedPatient.name,
+          age: updatedPatient.age,
+          gender: updatedPatient.gender,
+          avatar: updatedPatient.avatar,
+          symptoms: updatedPatient.symptoms,
+          priority: updatedPatient.priority
         };
-
+        
+        await apiStore.updatePatient(updatedPatient.id, patientUpdates);
+        
+        // Update local state
         set(state => ({
-          assignedPatients: state.assignedPatients.map(p => 
-            p.id === patientId ? updatedPatient : p
+          patients: state.patients.map(p => 
+            p.id === updatedPatient.id ? updatedPatient : p
           ),
+          assignedPatients: state.assignedPatients.map(p => 
+            p.id === updatedPatient.id ? updatedPatient : p
+          )
         }));
+        
+        showToast('Patient updated successfully!');
+      } catch (error) {
+        console.error('Failed to update patient:', error);
+        showToast('Failed to update patient', 'error');
       }
-    },
-
-    updatePatient: (updatedPatient: Patient) => {
-      set(state => ({
-        assignedPatients: state.assignedPatients.map(p => 
-          p.id === updatedPatient.id ? updatedPatient : p
-        ),
-        patients: state.patients.map(p => 
-          p.id === updatedPatient.id ? updatedPatient : p
-        ),
-      }));
-    },
+    }
   };
 });

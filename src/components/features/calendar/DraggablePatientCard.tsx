@@ -1,11 +1,11 @@
 import React from 'react';
 import { useDraggable } from '@dnd-kit/core';
 import { PatientCard } from './PatientCard';
-import { Patient } from '../../../lib/mockPatients';
+import { PatientLegacy } from '../../../lib/types';
 
 interface DraggablePatientCardProps {
-  patient: Patient;
-  onClick?: (patient: Patient) => void;
+  patient: PatientLegacy;
+  onClick?: (patient: PatientLegacy) => void;
 }
 
 export const DraggablePatientCard: React.FC<DraggablePatientCardProps> = ({ patient, onClick }) => {

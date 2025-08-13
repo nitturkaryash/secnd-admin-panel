@@ -7,6 +7,7 @@ interface CardProps {
   onClick?: () => void;
   hoverable?: boolean;
   padding?: 'sm' | 'md' | 'lg';
+  style?: React.CSSProperties;
 }
 
 const Card: React.FC<CardProps> = ({
@@ -14,7 +15,8 @@ const Card: React.FC<CardProps> = ({
   className = '',
   onClick,
   hoverable = false,
-  padding = 'md'
+  padding = 'md',
+  style = {}
 }) => {
   const paddingStyles = {
     sm: spacing.sm,
@@ -40,7 +42,8 @@ const Card: React.FC<CardProps> = ({
   const styles = {
     ...baseStyles,
     ...hoverStyles,
-    padding: paddingStyles[padding]
+    padding: paddingStyles[padding],
+    ...style
   };
 
   return (

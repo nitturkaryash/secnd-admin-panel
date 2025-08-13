@@ -3,17 +3,17 @@
  */
 import React from 'react';
 import { useDroppable } from '@dnd-kit/core';
-import { Patient } from '../../../lib/mockPatients';
+import { PatientLegacy } from '../../../lib/types';
 import { DraggablePatientCard } from './DraggablePatientCard';
 
 interface DroppableTimeSlotProps {
   doctorId: string;
   timeKey: string;
-  patients: Patient[];
+  patients: PatientLegacy[];
   className?: string;
   style?: React.CSSProperties;
   children?: React.ReactNode;
-  onPatientClick?: (patient: Patient) => void;
+  onPatientClick?: (patient: PatientLegacy) => void;
 }
 
 export const DroppableTimeSlot: React.FC<DroppableTimeSlotProps> = ({

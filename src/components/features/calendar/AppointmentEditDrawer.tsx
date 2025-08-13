@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { colors, spacing, borderRadius, typography } from '../../../styles/theme';
 import { Button } from '../../ui';
-import { Patient } from '../../../lib/mockPatients';
+import { PatientLegacy } from '../../../lib/types';
 
 interface AppointmentEditDrawerProps {
-  patient: Patient | null;
+  patient: PatientLegacy | null;
   isOpen: boolean;
   onClose: () => void;
-  onSave: (patient: Patient) => void;
+  onSave: (patient: PatientLegacy) => void;
 }
 
 const AppointmentEditDrawer: React.FC<AppointmentEditDrawerProps> = ({
@@ -17,7 +17,7 @@ const AppointmentEditDrawer: React.FC<AppointmentEditDrawerProps> = ({
   onSave
 }) => {
   // Debug logging removed for production
-  const [editedPatient, setEditedPatient] = useState<Patient | null>(null);
+  const [editedPatient, setEditedPatient] = useState<PatientLegacy | null>(null);
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedStartTime, setSelectedStartTime] = useState('');
   const [selectedEndTime, setSelectedEndTime] = useState('');
@@ -83,7 +83,7 @@ const AppointmentEditDrawer: React.FC<AppointmentEditDrawerProps> = ({
       const newDateTime = new Date(selectedDate);
       newDateTime.setHours(hours, minutes, 0, 0);
       
-      const updatedPatient: Patient = {
+      const updatedPatient: PatientLegacy = {
         ...editedPatient,
         appointmentDateTime: newDateTime.toISOString(),
         // Store end time as additional property (we'll extend the Patient type later)
